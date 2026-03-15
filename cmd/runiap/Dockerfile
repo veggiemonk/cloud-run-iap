@@ -4,7 +4,7 @@ RUN go install github.com/a-h/templ/cmd/templ@v0.3.1001
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN templ generate && CGO_ENABLED=0 GOOS=linux go build -o /runiap .
+RUN templ generate && CGO_ENABLED=0 GOOS=linux go build -o /runiap ./cmd/runiap
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /runiap /runiap

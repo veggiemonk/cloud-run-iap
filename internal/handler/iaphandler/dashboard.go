@@ -1,12 +1,12 @@
-package handler
+package iaphandler
 
 import (
 	"log/slog"
 	"net/http"
 
-	"github.com/veggiemonk/cloud-run-iap/internal/components"
-	"github.com/veggiemonk/cloud-run-iap/internal/iap"
-	"github.com/veggiemonk/cloud-run-iap/internal/render"
+	"github.com/veggiemonk/cloud-run-auth/internal/components/iapui"
+	"github.com/veggiemonk/cloud-run-auth/internal/iap"
+	"github.com/veggiemonk/cloud-run-auth/internal/shared/render"
 )
 
 // Dashboard returns a handler for the main dashboard page.
@@ -14,7 +14,7 @@ func Dashboard(verifier *iap.Verifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		det := iap.DetectionResultFromContext(r)
 
-		data := components.DashboardData{
+		data := iapui.DashboardData{
 			HasIAP:     det.HasJWT,
 			IAPWarning: det.Warning,
 		}
@@ -48,7 +48,7 @@ func Dashboard(verifier *iap.Verifier) http.HandlerFunc {
 			return
 		}
 
-		if err := components.DashboardPage(data).Render(r.Context(), w); err != nil {
+		if err := iapui.DashboardPage(data).Render(r.Context(), w); err != nil {
 			slog.Error("failed to render dashboard", "error", err)
 		}
 	}

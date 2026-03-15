@@ -1,9 +1,12 @@
-package components
+package iapui
 
-import "github.com/veggiemonk/cloud-run-iap/internal/iap"
+import (
+	"github.com/veggiemonk/cloud-run-auth/internal/iap"
+	shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+)
 
 templ JWTPage(data JWTData) {
-	@Layout("JWT Decoder", "jwt") {
+	@shared.Layout("JWT Decoder", "jwt", IAPNav()) {
 		<h1>JWT Decoder</h1>
 		if !data.Present {
 			<div class="alert alert-info">No IAP JWT found in request headers. Deploy behind IAP to see JWT details.</div>

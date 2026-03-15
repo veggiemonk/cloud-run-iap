@@ -1,4 +1,4 @@
-module github.com/veggiemonk/cloud-run-iap
+module github.com/veggiemonk/cloud-run-auth
 
 go 1.26.1
 

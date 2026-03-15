@@ -1,7 +1,9 @@
-package components
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
 
 templ DashboardPage(data DashboardData) {
-	@Layout("Dashboard", "dashboard") {
+	@shared.Layout("Dashboard", "dashboard", IAPNav()) {
 		<h1>Dashboard</h1>
 		if data.HasIAP {
 			<span class="badge badge-pass">IAP Active</span>

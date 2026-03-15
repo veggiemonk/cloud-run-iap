@@ -1,13 +1,13 @@
-package handler
+package iaphandler
 
 import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
-	"github.com/veggiemonk/cloud-run-iap/internal/components"
-	"github.com/veggiemonk/cloud-run-iap/internal/iap"
-	"github.com/veggiemonk/cloud-run-iap/internal/render"
+	"github.com/veggiemonk/cloud-run-auth/internal/components/iapui"
+	"github.com/veggiemonk/cloud-run-auth/internal/iap"
+	"github.com/veggiemonk/cloud-run-auth/internal/shared/render"
 )
 
 // JWT returns a handler that inspects the IAP JWT.
@@ -15,7 +15,7 @@ func JWT(verifier *iap.Verifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		det := iap.DetectionResultFromContext(r)
 
-		data := components.JWTData{
+		data := iapui.JWTData{
 			Present: det.HasJWT,
 		}
 
@@ -53,7 +53,7 @@ func JWT(verifier *iap.Verifier) http.HandlerFunc {
 			return
 		}
 
-		if err := components.JWTPage(data).Render(r.Context(), w); err != nil {
+		if err := iapui.JWTPage(data).Render(r.Context(), w); err != nil {
 			slog.Error("failed to render jwt", "error", err)
 		}
 	}

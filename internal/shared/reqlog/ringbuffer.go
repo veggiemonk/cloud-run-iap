@@ -13,7 +13,7 @@ type Entry struct {
 	Method     string    `json:"method"`
 	Path       string    `json:"path"`
 	Email      string    `json:"email,omitempty"`
-	HasIAP     bool      `json:"has_iap"`
+	AuthType   string    `json:"auth_type,omitempty"`
 	RemoteAddr string    `json:"remote_addr"`
 }
 

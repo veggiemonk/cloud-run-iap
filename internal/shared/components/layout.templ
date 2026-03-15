@@ -1,0 +1,36 @@
+package components
+
+import "os"
+
+templ Layout(title string, activePage string, nav NavConfig) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ nav.Brand } - { title }</title>
+		<link rel="stylesheet" href="/static/style.css"/>
+	</head>
+	<body>
+		<nav>
+			<span class="brand">{ nav.Brand }</span>
+			for _, item := range nav.Items {
+				<a href={ templ.SafeURL(item.Href) } class={ templ.KV("active", activePage == item.Page) }>{ item.Label }</a>
+			}
+		</nav>
+		<main>
+			{ children... }
+		</main>
+		<footer>
+			{ nav.Brand } &mdash; Revision: { revision() }
+		</footer>
+	</body>
+	</html>
+}
+
+func revision() string {
+	if r := os.Getenv("K_REVISION"); r != "" {
+		return r
+	}
+	return "local"
+}

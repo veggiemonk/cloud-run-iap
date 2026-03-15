@@ -1,4 +1,4 @@
-package handler
+package iaphandler
 
 import "net/http"
 

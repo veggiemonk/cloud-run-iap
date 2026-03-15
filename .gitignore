@@ -4,5 +4,7 @@
 /dist
 # makefile generated files
 /bin
+# go build output
+/runiap
 # templ generated files
 *_templ.go

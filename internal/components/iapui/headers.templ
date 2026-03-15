@@ -1,7 +1,9 @@
-package components
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
 
 templ HeadersPage(data HeadersData) {
-	@Layout("Headers", "headers") {
+	@shared.Layout("Headers", "headers", IAPNav()) {
 		<h1>Header Inspector</h1>
 		<p>All HTTP headers from the current request. IAP-specific headers are highlighted.</p>
 		<div class="card">

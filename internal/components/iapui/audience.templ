@@ -1,7 +1,9 @@
-package components
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
 
 templ AudiencePage(data AudienceData) {
-	@Layout("Audience Validator", "audience") {
+	@shared.Layout("Audience Validator", "audience", IAPNav()) {
 		<h1>Audience Validator</h1>
 		<p>Verify the JWT audience claim matches your expected Cloud Run service audience.</p>
 		<div class="card">

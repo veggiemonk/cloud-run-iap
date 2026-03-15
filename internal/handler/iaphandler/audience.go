@@ -1,18 +1,18 @@
-package handler
+package iaphandler
 
 import (
 	"log/slog"
 	"net/http"
 
-	"github.com/veggiemonk/cloud-run-iap/internal/components"
-	"github.com/veggiemonk/cloud-run-iap/internal/iap"
-	"github.com/veggiemonk/cloud-run-iap/internal/render"
+	"github.com/veggiemonk/cloud-run-auth/internal/components/iapui"
+	"github.com/veggiemonk/cloud-run-auth/internal/iap"
+	"github.com/veggiemonk/cloud-run-auth/internal/shared/render"
 )
 
 // Audience returns a handler for audience validation (GET + POST).
 func Audience(verifier *iap.Verifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := components.AudienceData{
+		data := iapui.AudienceData{
 			FormatHelp: "/projects/PROJECT_NUMBER/locations/REGION/services/SERVICE_NAME",
 		}
 
@@ -43,7 +43,7 @@ func Audience(verifier *iap.Verifier) http.HandlerFunc {
 			return
 		}
 
-		if err := components.AudiencePage(data).Render(r.Context(), w); err != nil {
+		if err := iapui.AudiencePage(data).Render(r.Context(), w); err != nil {
 			slog.Error("failed to render audience", "error", err)
 		}
 	}

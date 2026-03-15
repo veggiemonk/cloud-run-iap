@@ -1,7 +1,9 @@
-package components
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
 
 templ DiagnosticPage(data DiagnosticData) {
-	@Layout("Diagnostic", "diagnostic") {
+	@shared.Layout("Diagnostic", "diagnostic", IAPNav()) {
 		<h1>IAP Diagnostic</h1>
 		<p>Health checks for your IAP configuration.</p>
 		<div class="card">

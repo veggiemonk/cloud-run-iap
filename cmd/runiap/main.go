@@ -1,20 +1,17 @@
 package main
 
 import (
-	"embed"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/veggiemonk/cloud-run-iap/internal/handler"
-	"github.com/veggiemonk/cloud-run-iap/internal/iap"
-	"github.com/veggiemonk/cloud-run-iap/internal/reqlog"
+	"github.com/veggiemonk/cloud-run-auth/internal/assets"
+	"github.com/veggiemonk/cloud-run-auth/internal/handler/iaphandler"
+	"github.com/veggiemonk/cloud-run-auth/internal/iap"
+	"github.com/veggiemonk/cloud-run-auth/internal/shared"
+	"github.com/veggiemonk/cloud-run-auth/internal/shared/reqlog"
 )
-
-//go:embed static
-var staticFiles embed.FS
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -36,7 +33,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Static files (no auth required).
-	staticFS, err := fs.Sub(staticFiles, "static")
+	staticFS, err := fs.Sub(assets.StaticFiles, "static")
 	if err != nil {
 		slog.Error("failed to create static sub-filesystem", "error", err)
 		os.Exit(1)
@@ -44,21 +41,27 @@ func main() {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	// Health check (no auth required).
-	mux.Handle("GET /healthz", handler.Healthz())
+	mux.Handle("GET /healthz", iaphandler.Healthz())
 
 	// Protected routes — wrapped with IAP auth middleware.
 	protected := http.NewServeMux()
-	protected.Handle("GET /", handler.Dashboard(verifier))
-	protected.Handle("GET /headers", handler.Headers())
-	protected.Handle("GET /jwt", handler.JWT(verifier))
-	protected.Handle("GET /audience", handler.Audience(verifier))
-	protected.Handle("POST /audience", handler.Audience(verifier))
-	protected.Handle("GET /log", handler.Log(buf))
-	protected.Handle("GET /diagnostic", handler.Diagnostic(verifier))
+	protected.Handle("GET /", iaphandler.Dashboard(verifier))
+	protected.Handle("GET /headers", iaphandler.Headers())
+	protected.Handle("GET /jwt", iaphandler.JWT(verifier))
+	protected.Handle("GET /audience", iaphandler.Audience(verifier))
+	protected.Handle("POST /audience", iaphandler.Audience(verifier))
+	protected.Handle("GET /log", iaphandler.Log(buf))
+	protected.Handle("GET /diagnostic", iaphandler.Diagnostic(verifier))
 	mux.Handle("/", requireIAP(verifier, protected))
 
+	// IAP-specific email extractor for request log middleware.
+	iapEmailExtractor := func(r *http.Request) string {
+		det := iap.Detect(r)
+		return det.Email
+	}
+
 	// Wrap with middleware.
-	wrapped := loggingMiddleware(logger, requestLogMiddleware(buf, mux))
+	wrapped := shared.LoggingMiddleware(logger, shared.RequestLogMiddleware(buf, iapEmailExtractor, "iap", mux))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -70,53 +73,6 @@ func main() {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
 	}
-}
-
-// loggingMiddleware logs each request using structured logging.
-func loggingMiddleware(logger *slog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		sw := &statusWriter{ResponseWriter: w, status: 200}
-
-		next.ServeHTTP(sw, r)
-
-		logger.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"status", sw.status,
-			"duration_ms", time.Since(start).Milliseconds(),
-			"remote_addr", r.RemoteAddr,
-		)
-	})
-}
-
-// requestLogMiddleware records each request into the ring buffer.
-func requestLogMiddleware(buf *reqlog.Buffer, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		det := iap.Detect(r)
-
-		buf.Add(reqlog.Entry{
-			Timestamp:  time.Now(),
-			Method:     r.Method,
-			Path:       r.URL.Path,
-			Email:      det.Email,
-			HasIAP:     det.HasJWT,
-			RemoteAddr: r.RemoteAddr,
-		})
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-// statusWriter wraps http.ResponseWriter to capture the status code.
-type statusWriter struct {
-	http.ResponseWriter
-	status int
-}
-
-func (sw *statusWriter) WriteHeader(code int) {
-	sw.status = code
-	sw.ResponseWriter.WriteHeader(code)
 }
 
 // requireIAP rejects requests that don't have a valid IAP JWT.
