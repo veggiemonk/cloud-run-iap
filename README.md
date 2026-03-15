@@ -39,7 +39,7 @@ Do your users need to access GCP resources on their behalf?
 
 ### RunIAP — Identity-Aware Proxy on Cloud Run
 
-**Directory:** [`cmd/runiap/`](cmd/runiap/)
+**Directory:** [`cmd/runiap/`](cmd/runiap/) | **In-depth guide:** [`docs/iap-guide.md`](docs/iap-guide.md)
 
 Demonstrates IAP-based authentication where Google manages login and your app receives verified identity tokens. Includes diagnostic pages for inspecting IAP headers, decoding JWTs, verifying audiences, and detecting misconfigurations.
 
