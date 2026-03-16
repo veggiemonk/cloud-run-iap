@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -42,7 +43,11 @@ func main() {
 	defer store.Close()
 
 	// Create OAuth config.
-	oauthCfg := newGoogleConfig(cfg.Google.ClientID, cfg.Google.ClientSecret, cfg.Google.RedirectURL)
+	oauthCfg, err := newGoogleConfig(cfg)
+	if err != nil {
+		slog.Error("failed to create OAuth config", "error", err)
+		os.Exit(1)
+	}
 
 	// Cookie config (production vs dev).
 	cookies := NewCookieConfig(cfg.KRevision)
@@ -136,19 +141,37 @@ func main() {
 	}
 }
 
-// newGoogleConfig creates an OAuth2 config. We inline this rather than importing
-// oauth.NewGoogleConfig to avoid pulling in the in-memory session store dependency.
-func newGoogleConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Scopes: []string{
-			"openid",
-			"email",
-			"profile",
-			"https://www.googleapis.com/auth/cloud-platform.read-only",
-		},
-		Endpoint: google.Endpoint,
+// newGoogleConfig creates an OAuth2 config from either GOOGLE_OAUTH_CONFIG JSON
+// blob (production) or individual env vars (local dev).
+func newGoogleConfig(cfg Config) (*oauth2.Config, error) {
+	scopes := []string{
+		"openid",
+		"email",
+		"profile",
+		"https://www.googleapis.com/auth/cloud-platform.read-only",
 	}
+
+	// Prefer full JSON blob (production path).
+	if cfg.Google.OAuthConfig != "" {
+		oauthCfg, err := google.ConfigFromJSON([]byte(cfg.Google.OAuthConfig), scopes...)
+		if err != nil {
+			return nil, fmt.Errorf("parsing GOOGLE_OAUTH_CONFIG: %w", err)
+		}
+		if cfg.Google.RedirectURL != "" {
+			oauthCfg.RedirectURL = cfg.Google.RedirectURL
+		}
+		return oauthCfg, nil
+	}
+
+	// Fallback: individual env vars (local dev).
+	if cfg.Google.ClientID == "" || cfg.Google.ClientSecret == "" {
+		return nil, fmt.Errorf("either GOOGLE_OAUTH_CONFIG or both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required")
+	}
+	return &oauth2.Config{
+		ClientID:     cfg.Google.ClientID,
+		ClientSecret: cfg.Google.ClientSecret,
+		RedirectURL:  cfg.Google.RedirectURL,
+		Scopes:       scopes,
+		Endpoint:     google.Endpoint,
+	}, nil
 }

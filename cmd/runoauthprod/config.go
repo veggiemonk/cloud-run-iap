@@ -34,8 +34,9 @@ type Config struct {
 	AuthRateLimitBurst   int    `conf:"env:AUTH_RATE_LIMIT_BURST,default:20"`
 	UserRateLimitBurst   int    `conf:"env:USER_RATE_LIMIT_BURST,default:60"`
 	Google               struct {
-		ClientID     string `conf:"env:GOOGLE_CLIENT_ID,required"`
-		ClientSecret string `conf:"env:GOOGLE_CLIENT_SECRET,required,mask"`
+		OAuthConfig  string `conf:"env:GOOGLE_OAUTH_CONFIG,mask"`
+		ClientID     string `conf:"env:GOOGLE_CLIENT_ID"`
+		ClientSecret string `conf:"env:GOOGLE_CLIENT_SECRET,mask"`
 		RedirectURL  string `conf:"env:OAUTH_REDIRECT_URL,default:http://localhost:8080/auth/callback"`
 	}
 }
