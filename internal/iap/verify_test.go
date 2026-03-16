@@ -126,14 +126,16 @@ func TestExpectedAudience(t *testing.T) {
 
 func TestParseClaims_AllFields(t *testing.T) {
 	payload := map[string]any{
-		"iss":           "https://cloud.google.com/iap",
-		"sub":           "subject-123",
-		"email":         "user@example.com",
-		"hd":            "example.com",
-		"aud":           "/projects/123/global/backendServices/456",
-		"iat":           1700000000.0,
-		"exp":           1700003600.0,
-		"access_levels": []any{"level1", "level2"},
+		"iss":   "https://cloud.google.com/iap",
+		"sub":   "subject-123",
+		"email": "user@example.com",
+		"hd":    "example.com",
+		"aud":   "/projects/123/global/backendServices/456",
+		"iat":   1700000000.0,
+		"exp":   1700003600.0,
+		"google": map[string]any{
+			"access_levels": []any{"level1", "level2"},
+		},
 	}
 
 	c := parseClaims(payload)

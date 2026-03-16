@@ -1,0 +1,42 @@
+package oauthui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ GCPPage(data GCPData) {
+	@shared.Layout("GCP Explorer", "gcp", OAuthNav()) {
+		<h1>GCP Explorer</h1>
+		<div class="alert alert-warning">
+			<strong>Security Note:</strong> Your app could silently exfiltrate this data — the user granted cloud-platform.read-only scope, which lets this app list all their GCP projects. A malicious app could send this data anywhere.
+		</div>
+		if data.Error != "" {
+			<div class="card">
+				<div class="card-header">Error</div>
+				<p>{ data.Error }</p>
+			</div>
+		} else {
+			<div class="card">
+				<div class="card-header">Projects</div>
+				if len(data.Projects) == 0 {
+					<div class="empty-state"><p>No projects found.</p></div>
+				} else {
+					<table>
+						<thead>
+							<tr>
+								<th>Project ID</th>
+								<th>Project Name</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, p := range data.Projects {
+								<tr>
+									<td><code>{ p.ID }</code></td>
+									<td>{ p.Name }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				}
+			</div>
+		}
+	}
+}

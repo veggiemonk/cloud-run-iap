@@ -134,10 +134,12 @@ func parseClaims(payload map[string]any) *Claims {
 	if v, ok := payload["exp"].(float64); ok {
 		c.ExpiresAt = time.Unix(int64(v), 0)
 	}
-	if v, ok := payload["access_levels"].([]any); ok {
-		for _, al := range v {
-			if s, ok := al.(string); ok {
-				c.AccessLevels = append(c.AccessLevels, s)
+	if g, ok := payload["google"].(map[string]any); ok {
+		if v, ok := g["access_levels"].([]any); ok {
+			for _, al := range v {
+				if s, ok := al.(string); ok {
+					c.AccessLevels = append(c.AccessLevels, s)
+				}
 			}
 		}
 	}

@@ -1,0 +1,60 @@
+package oauthui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ DashboardPage(data DashboardData) {
+	@shared.Layout("Dashboard", "dashboard", OAuthNav()) {
+		<h1>Dashboard</h1>
+		<div class="alert alert-warning">
+			<strong>Security Note:</strong> OAuth tokens grant broad access — your app receives tokens that can read GCP resources on the user's behalf. Unlike IAP (which only proves identity), OAuth tokens are ambient authority.
+		</div>
+		<div class="card">
+			<div class="card-header">Identity</div>
+			<dl class="identity-card">
+				if data.Picture != "" {
+					<dt>Picture</dt>
+					<dd><img src={ data.Picture } alt="Profile" width="48" height="48" style="border-radius: 50%;"/></dd>
+				}
+				<dt>Email</dt>
+				<dd>
+					if data.Email != "" {
+						{ data.Email }
+					} else {
+						<span class="badge badge-neutral">Unknown</span>
+					}
+				</dd>
+				<dt>Name</dt>
+				<dd>
+					if data.Name != "" {
+						{ data.Name }
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+				<dt>Token Expiry</dt>
+				<dd>
+					if data.TokenExpiry != "" {
+						{ data.TokenExpiry }
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+				<dt>Session Age</dt>
+				<dd>
+					if data.SessionAge != "" {
+						{ data.SessionAge }
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+			</dl>
+		</div>
+		<div class="card">
+			<div class="card-header">Quick Links</div>
+			<p><a href="/token">Token Inspector</a> — View your OAuth token details</p>
+			<p><a href="/gcp">GCP Explorer</a> — Browse your GCP projects</p>
+			<p><a href="/diagnostic">Diagnostic</a> — Run OAuth health checks</p>
+			<p><a href="/auth/logout">Logout</a> — End your session</p>
+		</div>
+	}
+}

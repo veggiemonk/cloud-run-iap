@@ -1,0 +1,72 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go tool templ generate
+
+builds:
+  - id: runiap
+    main: ./cmd/runiap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+  - id: runoauth
+    main: ./cmd/runoauth
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+kos:
+  - id: runiap
+    repositories:
+      - ghcr.io/veggiemonk/cloud-run-auth/runiap
+    bare: true
+    base_image: cgr.dev/chainguard/static
+    platforms:
+      - linux/amd64
+    tags:
+      - "{{.Tag}}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    creation_time: "{{.CommitTimestamp}}"
+    sbom: none
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+  - id: runoauth
+    repositories:
+      - ghcr.io/veggiemonk/cloud-run-auth/runoauth
+    bare: true
+    base_image: cgr.dev/chainguard/static
+    platforms:
+      - linux/amd64
+    tags:
+      - "{{.Tag}}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    creation_time: "{{.CommitTimestamp}}"
+    sbom: none
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w

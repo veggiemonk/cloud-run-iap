@@ -1,1 +1,12 @@
 /.claude/settings.local.json
+
+# gorelease generated files
+/dist
+# makefile generated files
+/bin
+# go build output
+/runiap
+/runoauth
+/runoauthprod
+# templ generated files
+*_templ.go

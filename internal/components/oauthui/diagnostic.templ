@@ -1,0 +1,35 @@
+package oauthui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ DiagnosticPage(data DiagnosticData) {
+	@shared.Layout("Diagnostic", "diagnostic", OAuthNav()) {
+		<h1>OAuth Diagnostic</h1>
+		<p>Health checks for your OAuth configuration.</p>
+		<div class="card">
+			if len(data.Checks) == 0 {
+				<div class="empty-state"><p>No checks to display.</p></div>
+			} else {
+				<ul class="checklist">
+					for _, c := range data.Checks {
+						<li>
+							<span class="check-icon">
+								if c.Status == "pass" {
+									&#x2705;
+								} else if c.Status == "fail" {
+									&#x274C;
+								} else {
+									&#x26A0;&#xFE0F;
+								}
+							</span>
+							<div class="check-content">
+								<div class="check-name">{ c.Name }</div>
+								<div class="check-detail">{ c.Detail }</div>
+							</div>
+						</li>
+					}
+				</ul>
+			}
+		</div>
+	}
+}

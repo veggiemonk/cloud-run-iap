@@ -1,0 +1,51 @@
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ LogPage(data LogData) {
+	@shared.Layout("Request Log", "log", IAPNav()) {
+		<h1>Identity Timeline</h1>
+		<p>Recent requests with identity information. Auto-refreshes every 5 seconds.</p>
+		<meta http-equiv="refresh" content="5"/>
+		<div class="card">
+			if len(data.Entries) == 0 {
+				<div class="empty-state"><p>No requests logged yet.</p></div>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Time</th>
+							<th>Method</th>
+							<th>Path</th>
+							<th>Email</th>
+							<th>Auth</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, e := range data.Entries {
+							<tr>
+								<td>{ e.Timestamp.Format("15:04:05") }</td>
+								<td>{ e.Method }</td>
+								<td>{ e.Path }</td>
+								<td>
+									if e.Email != "" {
+										{ e.Email }
+									} else {
+										<span class="badge badge-neutral">—</span>
+									}
+								</td>
+								<td>
+									if e.AuthType != "" {
+										<span class="badge badge-pass">{ e.AuthType }</span>
+									} else {
+										<span class="badge badge-neutral">None</span>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</div>
+	}
+}

@@ -1,0 +1,21 @@
+defaultBaseImage: cgr.dev/chainguard/static
+defaultPlatforms:
+  - linux/amd64
+  - linux/arm64
+builds:
+  - id: runiap
+    main: ./cmd/runiap
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    env:
+      - CGO_ENABLED=0
+  - id: runoauth
+    main: ./cmd/runoauth
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    env:
+      - CGO_ENABLED=0

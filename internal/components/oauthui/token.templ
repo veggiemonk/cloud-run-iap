@@ -1,0 +1,61 @@
+package oauthui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ TokenPage(data TokenData) {
+	@shared.Layout("Token", "token", OAuthNav()) {
+		<h1>Token Inspector</h1>
+		<div class="alert alert-warning">
+			<strong>Security Note:</strong> Bearer tokens are ambient authority — anyone with this token can act as the user. Never log tokens, expose them in URLs, or store them without encryption.
+		</div>
+		<div class="card">
+			<div class="card-header">Access Token</div>
+			<dl class="identity-card">
+				<dt>Token (masked)</dt>
+				<dd>
+					if data.AccessTokenMasked != "" {
+						<code>{ data.AccessTokenMasked }</code>
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+				<dt>Token Type</dt>
+				<dd>
+					if data.TokenType != "" {
+						{ data.TokenType }
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+				<dt>Expiry</dt>
+				<dd>
+					if data.Expiry != "" {
+						{ data.Expiry }
+					} else {
+						<span class="badge badge-neutral">N/A</span>
+					}
+				</dd>
+				<dt>Refresh Token</dt>
+				<dd>
+					if data.HasRefreshToken {
+						<span class="badge badge-pass">Present</span>
+					} else {
+						<span class="badge badge-neutral">Not present</span>
+					}
+				</dd>
+			</dl>
+		</div>
+		<div class="card">
+			<div class="card-header">Scopes</div>
+			if len(data.Scopes) > 0 {
+				<ul>
+					for _, scope := range data.Scopes {
+						<li><code>{ scope }</code></li>
+					}
+				</ul>
+			} else {
+				<p><span class="badge badge-neutral">No scopes available</span></p>
+			}
+		</div>
+	}
+}

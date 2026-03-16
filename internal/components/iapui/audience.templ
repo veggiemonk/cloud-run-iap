@@ -1,0 +1,34 @@
+package iapui
+
+import shared "github.com/veggiemonk/cloud-run-auth/internal/shared/components"
+
+templ AudiencePage(data AudienceData) {
+	@shared.Layout("Audience Validator", "audience", IAPNav()) {
+		<h1>Audience Validator</h1>
+		<p>Verify the JWT audience claim matches your expected Cloud Run service audience.</p>
+		<div class="card">
+			<div class="card-header">Current Audience (from JWT)</div>
+			if data.CurrentAudience != "" {
+				<code>{ data.CurrentAudience }</code>
+			} else {
+				<span class="badge badge-neutral">No audience claim found — no JWT present</span>
+			}
+		</div>
+		<div class="card">
+			<div class="card-header">Validate Audience</div>
+			<form method="POST" action="/audience">
+				<label for="audience">Expected Audience</label>
+				<input type="text" id="audience" name="audience" value={ data.ExpectedAudience } placeholder="/projects/PROJECT_NUMBER/locations/REGION/services/SERVICE_NAME"/>
+				<div class="format-help">Format: { data.FormatHelp }</div>
+				<button type="submit" class="btn btn-primary">Validate</button>
+			</form>
+			if data.Checked {
+				if data.Match {
+					<div class="alert alert-success">Audience matches!</div>
+				} else {
+					<div class="alert alert-error">Audience mismatch. Expected: { data.ExpectedAudience }, Got: { data.CurrentAudience }</div>
+				}
+			}
+		</div>
+	}
+}
