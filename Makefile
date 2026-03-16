@@ -2,10 +2,8 @@
 
 GO ?= go
 BIN_DIR := bin
-GO_VERSION := $(shell $(GO) env GOVERSION | sed 's/go//' | cut -d. -f1,2)
-
 .PHONY: help
-.PHONY: check build build-runiap build-runoauth build-runoauthprod docker docker-runiap docker-runoauth docker-runoauthprod generate
+.PHONY: check build build-runiap build-runoauth build-runoauthprod generate
 .PHONY: ko ko-runiap ko-runoauth ko-runoauthprod
 .PHONY: test lint fmt vet
 .PHONY: tidy clean run-runiap run-runoauth run-runoauthprod release-snapshot
@@ -63,17 +61,6 @@ tidy: ## Tidy go modules
 
 clean: ## Remove build artifacts
 	rm -rf $(BIN_DIR)
-
-docker: docker-runiap docker-runoauth docker-runoauthprod ## Build all container images
-
-docker-runiap: ## Build runiap container image
-	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runiap/Dockerfile -t runiap .
-
-docker-runoauth: ## Build runoauth container image
-	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runoauth/Dockerfile -t runoauth .
-
-docker-runoauthprod: ## Build runoauthprod container image
-	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runoauthprod/Dockerfile -t runoauthprod .
 
 ko: ko-runiap ko-runoauth ko-runoauthprod ## Build all images with ko
 

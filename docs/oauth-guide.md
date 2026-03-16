@@ -876,8 +876,7 @@ The OAuth app lives in `cmd/runoauth/` within the [cloud-run-auth monorepo](../R
 
 ```
 cmd/runoauth/
-├── main.go                          # HTTP server, routing, OAuth wiring
-└── Dockerfile                       # Multi-stage build (Go build → distroless)
+└── main.go                          # HTTP server, routing, OAuth wiring
 
 deploy/
 ├── _common.sh                       # Shared variables + functions
@@ -912,4 +911,3 @@ internal/
 - [`golang.org/x/oauth2`](https://pkg.go.dev/golang.org/x/oauth2) — OAuth 2.0 flow
 - [`google.golang.org/api/cloudresourcemanager/v3`](https://pkg.go.dev/google.golang.org/api/cloudresourcemanager/v3) — GCP project listing
 - [`github.com/a-h/templ`](https://templ.guide/) — Type-safe HTML templating
-- `gcr.io/distroless/static-debian12:nonroot` — Minimal, secure runtime image

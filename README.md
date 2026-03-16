@@ -167,17 +167,14 @@ Request only the OAuth scopes your app actually needs. Requesting broad scopes (
 cloud-run-auth/
 ├── cmd/
 │   ├── runiap/                      # IAP-based auth app
-│   │   ├── main.go                  # HTTP server, routing, middleware
-│   │   └── Dockerfile               # Multi-stage build (Go → distroless)
+│   │   └── main.go                  # HTTP server, routing, middleware
 │   ├── runoauth/                    # OAuth demo app
-│   │   ├── main.go                  # HTTP server, OAuth flow, routing
-│   │   └── Dockerfile               # Multi-stage build (Go → distroless)
+│   │   └── main.go                  # HTTP server, OAuth flow, routing
 │   └── runoauthprod/                # Production OAuth app
 │       ├── main.go                  # HTTP server, middleware chain, routing
 │       ├── config.go                # Configuration (ardanlabs/conf/v3)
 │       ├── auth.go                  # OAuth flow with encrypted sessions
-│       ├── cookies.go               # Cookie helpers (__Host- prefix, secure attrs)
-│       └── Dockerfile               # Multi-stage build (Go → distroless)
+│       └── cookies.go               # Cookie helpers (__Host- prefix, secure attrs)
 ├── deploy/                          # Deployment scripts (setup once, deploy many)
 │   ├── _common.sh                   # Shared variables + functions (sourced)
 │   ├── setup-iap.sh                 # One-time: APIs, IAM, domain restriction

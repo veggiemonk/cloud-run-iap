@@ -663,8 +663,7 @@ The IAP app lives in `cmd/runiap/` within the [cloud-run-auth monorepo](../READM
 
 ```
 cmd/runiap/
-├── main.go                          # HTTP server, routing, IAP middleware
-└── Dockerfile                       # Multi-stage build (Go build → distroless)
+└── main.go                          # HTTP server, routing, IAP middleware
 
 deploy/
 ├── _common.sh                       # Shared variables + functions
@@ -703,4 +702,3 @@ internal/
 **Key dependencies:**
 - [`google.golang.org/api/idtoken`](https://pkg.go.dev/google.golang.org/api/idtoken) — JWT signature verification
 - [`github.com/a-h/templ`](https://templ.guide/) — Type-safe HTML templating
-- `gcr.io/distroless/static-debian12:nonroot` — Minimal, secure runtime image
