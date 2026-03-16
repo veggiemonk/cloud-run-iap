@@ -52,10 +52,14 @@ Demonstrates IAP-based authentication where Google manages login and your app re
 **Deploy:**
 
 ```bash
-./cmd/runiap/deploy-iap.sh runiap
+# One-time setup (APIs, IAM, domain restriction)
+./deploy/setup-iap.sh runiap
+
+# Every deploy (build + deploy + set IAP_AUDIENCE)
+./deploy/deploy-iap.sh runiap
 ```
 
-The deploy script generates templ code, builds with ko, pushes to Artifact Registry, deploys to Cloud Run with IAP enabled, restricts access to your domain, and sets the `IAP_AUDIENCE` environment variable for JWT verification.
+The setup script enables APIs, grants IAP service agent access, and restricts domain access. The deploy script generates templ code, builds with ko, pushes to Artifact Registry, deploys to Cloud Run with IAP enabled, and sets the `IAP_AUDIENCE` environment variable for JWT verification.
 
 **What it demonstrates:**
 - IAP header inspection (`X-Goog-IAP-JWT-Assertion`, `X-Goog-Authenticated-User-Email`)
@@ -73,7 +77,11 @@ Demonstrates OAuth-based authentication where the app manages the full OAuth 2.0
 **Deploy:**
 
 ```bash
-./cmd/runoauth/deploy-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
+# One-time setup (APIs, Secret Manager access)
+./deploy/setup-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
+
+# Every deploy (build + deploy + update redirect URL)
+./deploy/deploy-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
 ```
 
 **What it demonstrates:**
@@ -87,6 +95,16 @@ Demonstrates OAuth-based authentication where the app manages the full OAuth 2.0
 **Directory:** [`cmd/runoauthprod/`](cmd/runoauthprod/) | **In-depth guide:** [`docs/runoauthprod-guide.md`](docs/runoauthprod-guide.md)
 
 Production-hardened OAuth app built on top of `cmd/runoauth/`. Adds encrypted Firestore sessions, CSRF protection, rate limiting, cookie hardening, security headers, and automatic token refresh with singleflight deduplication. Designed for real deployments where `runoauth` is too minimal.
+
+**Deploy:**
+
+```bash
+# One-time setup (APIs, Firestore, secrets, IAM)
+./deploy/setup-prod.sh runoauthprod
+
+# Every deploy (build + deploy with secrets)
+./deploy/deploy-prod.sh runoauthprod
+```
 
 **What it adds over RunOAuth:**
 - Encrypted Firestore sessions (AES-256-GCM) with TTL auto-eviction
@@ -150,18 +168,25 @@ cloud-run-auth/
 ├── cmd/
 │   ├── runiap/                      # IAP-based auth app
 │   │   ├── main.go                  # HTTP server, routing, middleware
-│   │   ├── Dockerfile               # Multi-stage build (Go → distroless)
-│   │   └── deploy-iap.sh            # Full deploy-with-IAP script
+│   │   └── Dockerfile               # Multi-stage build (Go → distroless)
 │   ├── runoauth/                    # OAuth demo app
 │   │   ├── main.go                  # HTTP server, OAuth flow, routing
-│   │   ├── Dockerfile               # Multi-stage build (Go → distroless)
-│   │   └── deploy-oauth.sh          # Full deploy-with-OAuth script
+│   │   └── Dockerfile               # Multi-stage build (Go → distroless)
 │   └── runoauthprod/                # Production OAuth app
 │       ├── main.go                  # HTTP server, middleware chain, routing
 │       ├── config.go                # Configuration (ardanlabs/conf/v3)
 │       ├── auth.go                  # OAuth flow with encrypted sessions
 │       ├── cookies.go               # Cookie helpers (__Host- prefix, secure attrs)
 │       └── Dockerfile               # Multi-stage build (Go → distroless)
+├── deploy/                          # Deployment scripts (setup once, deploy many)
+│   ├── _common.sh                   # Shared variables + functions (sourced)
+│   ├── setup-iap.sh                 # One-time: APIs, IAM, domain restriction
+│   ├── deploy-iap.sh               # Every deploy: build + deploy + IAP_AUDIENCE
+│   ├── setup-oauth.sh              # One-time: APIs, Secret Manager access
+│   ├── deploy-oauth.sh             # Every deploy: build + deploy + redirect URL
+│   ├── setup-prod.sh               # One-time: APIs, Firestore, secrets, IAM
+│   ├── deploy-prod.sh              # Every deploy: build + deploy with secrets
+│   └── publish.sh                   # Tag + push → GitHub Actions release
 ├── internal/
 │   ├── iap/                         # IAP header detection, JWT verification
 │   ├── oauth/                       # OAuth flow, session management (demo)
@@ -189,7 +214,6 @@ cloud-run-auth/
 │   ├── iap-guide.md                 # IAP model deep dive
 │   ├── oauth-guide.md               # OAuth model deep dive
 │   └── runoauthprod-guide.md        # Production OAuth guide
-├── setup-cloud-build.sh             # One-time Cloud Build setup
 ├── go.mod / go.sum                  # Go dependencies (single module)
 ├── Makefile                         # Build and dev commands
 ├── .goreleaser.yaml                 # Release automation with ko

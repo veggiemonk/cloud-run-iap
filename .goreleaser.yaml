@@ -36,6 +36,21 @@ builds:
     ldflags:
       - -s -w
 
+  - id: runoauthprod
+    main: ./cmd/runoauthprod
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
 kos:
   - id: runiap
     repositories:
@@ -57,6 +72,23 @@ kos:
   - id: runoauth
     repositories:
       - ghcr.io/veggiemonk/cloud-run-auth/runoauth
+    bare: true
+    base_image: cgr.dev/chainguard/static
+    platforms:
+      - linux/amd64
+    tags:
+      - "{{.Tag}}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    creation_time: "{{.CommitTimestamp}}"
+    sbom: none
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+  - id: runoauthprod
+    repositories:
+      - ghcr.io/veggiemonk/cloud-run-auth/runoauthprod
     bare: true
     base_image: cgr.dev/chainguard/static
     platforms:

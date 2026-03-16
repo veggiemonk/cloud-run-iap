@@ -53,10 +53,14 @@
 ## Quick Start
 
 ```bash
-./cmd/runoauth/deploy-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
+# One-time setup (APIs, Secret Manager access)
+./deploy/setup-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
+
+# Every deploy (build + deploy + update redirect URL)
+./deploy/deploy-oauth.sh runoauth --secret-name internal-tools-google-oauth-secret
 ```
 
-The script generates templ code, builds with [ko](https://ko.build/), pushes to Artifact Registry, deploys to Cloud Run, reads OAuth credentials from Secret Manager (or prompts interactively), and prints the redirect URI to add to your OAuth credentials.
+The setup script enables APIs and grants Secret Manager access. The deploy script generates templ code, builds with [ko](https://ko.build/), pushes to Artifact Registry, deploys to Cloud Run, reads OAuth credentials from Secret Manager (or prompts interactively), and prints the redirect URI to add to your OAuth credentials.
 
 > **Note:** You must first create OAuth credentials in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). You can store them in Secret Manager for automated deploys, or the script will prompt interactively.
 
@@ -143,31 +147,41 @@ Then use `--secret-name my-oauth-secret` when deploying instead of entering cred
 ### Deploy with OAuth
 
 ```bash
-./cmd/runoauth/deploy-oauth.sh <service-name> [--region <region>] [--secret-name <name>]
+# One-time setup
+./deploy/setup-oauth.sh <service-name> [--region <region>] [--secret-name <name>]
+
+# Every deploy
+./deploy/deploy-oauth.sh <service-name> [--region <region>] [--secret-name <name>]
 ```
 
 **Examples:**
 
 ```bash
-# Deploy with defaults (us-central1), prompt for credentials
-./cmd/runoauth/deploy-oauth.sh myapp
+# One-time setup with Secret Manager
+./deploy/setup-oauth.sh myapp --secret-name internal-tools-google-oauth-secret
 
 # Deploy with credentials from Secret Manager
-./cmd/runoauth/deploy-oauth.sh myapp --secret-name internal-tools-google-oauth-secret
+./deploy/deploy-oauth.sh myapp --secret-name internal-tools-google-oauth-secret
 
 # Deploy to a specific region
-./cmd/runoauth/deploy-oauth.sh myapp --region europe-west1
+./deploy/deploy-oauth.sh myapp --region europe-west1
 ```
 
-**What the script does (5 steps):**
+**What the setup script does:**
 
 | Step | Command | Purpose |
 |------|---------|---------|
 | 1 | `gcloud services enable ...` | Enable Cloud Run, Artifact Registry, Secret Manager APIs |
 | 2 | Secret Manager read or interactive prompt | Get OAuth Client ID and Client Secret |
-| 3 | `templ generate` + `ko build` | Generate templ code, build Go image with ko, push to Artifact Registry |
-| 4 | `gcloud run deploy --image ... --set-env-vars ...` | Deploy ko-built image with env vars (app handles auth) |
-| 5 | Verify URL | If the actual service URL differs from predicted, update `OAUTH_REDIRECT_URL` |
+| 3 | Grant IAM | Give compute SA access to the secret |
+
+**What the deploy script does:**
+
+| Step | Command | Purpose |
+|------|---------|---------|
+| 1 | `templ generate` + `ko build` | Generate templ code, build Go image with ko, push to Artifact Registry |
+| 2 | `gcloud run deploy --image ... --set-env-vars ...` | Deploy ko-built image with env vars (app handles auth) |
+| 3 | Verify URL | If the actual service URL differs from predicted, update `OAUTH_REDIRECT_URL` |
 
 After deployment, the script prints the redirect URI. You **must** add it to your OAuth credentials in the Console, or the callback will fail.
 
@@ -863,8 +877,12 @@ The OAuth app lives in `cmd/runoauth/` within the [cloud-run-auth monorepo](../R
 ```
 cmd/runoauth/
 ├── main.go                          # HTTP server, routing, OAuth wiring
-├── Dockerfile                       # Multi-stage build (Go build → distroless)
-└── deploy-oauth.sh                  # Full deploy-with-OAuth script
+└── Dockerfile                       # Multi-stage build (Go build → distroless)
+
+deploy/
+├── _common.sh                       # Shared variables + functions
+├── setup-oauth.sh                   # One-time OAuth infrastructure setup
+└── deploy-oauth.sh                  # Build and deploy with OAuth
 
 internal/
 ├── oauth/

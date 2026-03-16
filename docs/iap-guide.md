@@ -43,10 +43,14 @@
 ## Quick Start
 
 ```bash
-./cmd/runiap/deploy-iap.sh runiap
+# One-time setup (APIs, IAM, domain restriction)
+./deploy/setup-iap.sh runiap
+
+# Every deploy (build + deploy + set IAP_AUDIENCE)
+./deploy/deploy-iap.sh runiap
 ```
 
-The script generates templ code, builds with [ko](https://ko.build/), pushes to Artifact Registry, deploys to Cloud Run with IAP enabled, restricts access to `@myowndomain.com`, and sets the correct `IAP_AUDIENCE` environment variable.
+The setup script enables APIs, grants IAP service agent access, and restricts domain access. The deploy script generates templ code, builds with [ko](https://ko.build/), pushes to Artifact Registry, deploys to Cloud Run with IAP enabled, and sets the correct `IAP_AUDIENCE` environment variable.
 
 ---
 
@@ -92,29 +96,44 @@ Cloud Run's native IAP integration (the `--iap` flag) does this without needing 
 ### Deploy with IAP
 
 ```bash
-./cmd/runiap/deploy-iap.sh <service-name> [--region <region>] [--port <port>]
+# One-time setup
+./deploy/setup-iap.sh <service-name> [--region <region>] [--domain <domain>]
+
+# Every deploy
+./deploy/deploy-iap.sh <service-name> [--region <region>] [--port <port>]
 ```
 
 **Examples:**
 
 ```bash
+# One-time setup with defaults (us-central1, myowndomain.com)
+./deploy/setup-iap.sh runiap
+
+# Setup with custom domain
+./deploy/setup-iap.sh runiap --domain example.com
+
 # Deploy with defaults (us-central1, port 8080)
-./cmd/runiap/deploy-iap.sh runiap
+./deploy/deploy-iap.sh runiap
 
 # Deploy with custom region and port
-./cmd/runiap/deploy-iap.sh runiap --region europe-west1 --port 3000
+./deploy/deploy-iap.sh runiap --region europe-west1 --port 3000
 ```
 
-**What the script does (6 steps):**
+**What the setup script does:**
 
 | Step | Command | Purpose |
 |------|---------|---------|
 | 1 | `gcloud services enable ...` | Enable IAP, Cloud Run, Artifact Registry APIs |
-| 2 | `templ generate` + `ko build` | Generate templ code, build Go image with ko, push to Artifact Registry |
-| 3 | `gcloud run deploy --image ... --iap` | Deploy the ko-built image with IAP enabled |
-| 4 | `gcloud run services add-iam-policy-binding ...` | Let the IAP service agent invoke your Cloud Run service |
-| 5 | `gcloud iap web add-iam-policy-binding ...` | Restrict IAP access to `@myowndomain.com` |
-| 6 | `gcloud run services update --update-env-vars ...` | Set `IAP_AUDIENCE` for JWT verification |
+| 2 | `gcloud run services add-iam-policy-binding ...` | Let the IAP service agent invoke your Cloud Run service |
+| 3 | `gcloud iap web add-iam-policy-binding ...` | Restrict IAP access to your domain |
+
+**What the deploy script does:**
+
+| Step | Command | Purpose |
+|------|---------|---------|
+| 1 | `templ generate` + `ko build` | Generate templ code, build Go image with ko, push to Artifact Registry |
+| 2 | `gcloud run deploy --image ... --iap` | Deploy the ko-built image with IAP enabled |
+| 3 | `gcloud run services update --update-env-vars ...` | Set `IAP_AUDIENCE` for JWT verification |
 
 ### Step-by-Step Manual Deployment
 
@@ -645,8 +664,12 @@ The IAP app lives in `cmd/runiap/` within the [cloud-run-auth monorepo](../READM
 ```
 cmd/runiap/
 ├── main.go                          # HTTP server, routing, IAP middleware
-├── Dockerfile                       # Multi-stage build (Go build → distroless)
-└── deploy-iap.sh                    # Full deploy-with-IAP script
+└── Dockerfile                       # Multi-stage build (Go build → distroless)
+
+deploy/
+├── _common.sh                       # Shared variables + functions
+├── setup-iap.sh                     # One-time IAP infrastructure setup
+└── deploy-iap.sh                    # Build and deploy with IAP
 
 internal/
 ├── iap/

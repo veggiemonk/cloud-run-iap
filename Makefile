@@ -5,10 +5,10 @@ BIN_DIR := bin
 GO_VERSION := $(shell $(GO) env GOVERSION | sed 's/go//' | cut -d. -f1,2)
 
 .PHONY: help
-.PHONY: check build build-runiap build-runoauth docker docker-runiap docker-runoauth generate
-.PHONY: ko ko-runiap ko-runoauth
+.PHONY: check build build-runiap build-runoauth build-runoauthprod docker docker-runiap docker-runoauth docker-runoauthprod generate
+.PHONY: ko ko-runiap ko-runoauth ko-runoauthprod
 .PHONY: test lint fmt vet
-.PHONY: tidy clean run-runiap run-runoauth release-snapshot
+.PHONY: tidy clean run-runiap run-runoauth run-runoauthprod release-snapshot
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -21,7 +21,7 @@ check: generate fmt vet lint test ## Run local quality checks
 generate: ## Generate templ Go code from .templ files
 	$(GO) tool templ generate
 
-build: generate build-runiap build-runoauth ## Build all binaries
+build: generate build-runiap build-runoauth build-runoauthprod ## Build all binaries
 
 build-runiap: ## Build runiap binary
 	mkdir -p $(BIN_DIR)
@@ -31,11 +31,18 @@ build-runoauth: ## Build runoauth binary
 	mkdir -p $(BIN_DIR)
 	$(GO) build -o $(BIN_DIR)/runoauth ./cmd/runoauth
 
+build-runoauthprod: ## Build runoauthprod binary
+	mkdir -p $(BIN_DIR)
+	$(GO) build -o $(BIN_DIR)/runoauthprod ./cmd/runoauthprod
+
 run-runiap: build-runiap ## Run runiap locally
 	./$(BIN_DIR)/runiap
 
 run-runoauth: build-runoauth ## Run runoauth locally
 	./$(BIN_DIR)/runoauth
+
+run-runoauthprod: build-runoauthprod ## Run runoauthprod locally
+	./$(BIN_DIR)/runoauthprod
 
 test: ## Run tests with race detector
 	$(GO) test -race ./...
@@ -57,7 +64,7 @@ tidy: ## Tidy go modules
 clean: ## Remove build artifacts
 	rm -rf $(BIN_DIR)
 
-docker: docker-runiap docker-runoauth ## Build all container images
+docker: docker-runiap docker-runoauth docker-runoauthprod ## Build all container images
 
 docker-runiap: ## Build runiap container image
 	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runiap/Dockerfile -t runiap .
@@ -65,13 +72,19 @@ docker-runiap: ## Build runiap container image
 docker-runoauth: ## Build runoauth container image
 	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runoauth/Dockerfile -t runoauth .
 
-ko: ko-runiap ko-runoauth ## Build all images with ko
+docker-runoauthprod: ## Build runoauthprod container image
+	docker build --build-arg GO_VERSION=$(GO_VERSION) -f cmd/runoauthprod/Dockerfile -t runoauthprod .
+
+ko: ko-runiap ko-runoauth ko-runoauthprod ## Build all images with ko
 
 ko-runiap: generate ## Build runiap image with ko
 	ko build ./cmd/runiap --bare --platform=linux/amd64
 
 ko-runoauth: generate ## Build runoauth image with ko
 	ko build ./cmd/runoauth --bare --platform=linux/amd64
+
+ko-runoauthprod: generate ## Build runoauthprod image with ko
+	ko build ./cmd/runoauthprod --bare --platform=linux/amd64
 
 release-snapshot: ## Test goreleaser locally (no publish)
 	goreleaser release --snapshot --clean
